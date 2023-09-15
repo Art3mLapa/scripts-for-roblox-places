@@ -1,0 +1,69 @@
+local HttpService = game:GetService("HttpService")
+local InsertService = game:GetService("InsertService")
+local Item_Id = script.Parent.Settings.ItemIDHolder.Text
+local ButtonOnOff = script.Parent.Settings.TextButton
+local isRunning = false
+
+if Item_Id ~= "" then
+	local decalItem = game:GetService("InsertService"):GetFreeDecal(Item_Id)
+	script.Parent.Settings.ImageLabel.Image = decalItem
+end
+
+local Age = script.Parent.Settings.AccountsAge.Text
+local min_length = 3
+local max_length = 3
+
+if Age == "2007" then
+	min_length = 4
+	max_length = 4
+elseif Age == "2008" then
+	min_length = 4
+	max_length = 5
+end
+
+function generate_random_number(min_length, max_length)
+	local number = ""
+	for i = 1, math.random(min_length, max_length) do
+		number = number .. math.random(0, 9)
+	end
+	return tonumber(number)
+end
+
+ButtonOnOff.MouseButton1Click:Connect(function()
+	isRunning = not isRunning
+
+	if isRunning then
+		while true do
+			local random_number = generate_random_number(min_length, max_length)
+			local profile_url = "https://www.roblox.com/users/" .. random_number .. "/profile"
+
+			local response = HttpService:GetAsync(profile_url)
+
+			if response.status_code == 404 then
+				print("[X] This account does not exist")
+				continue
+			end
+
+			local inventory_url
+
+			if string.len(Item_Id) == 3 then
+				inventory_url = "https://inventory.roblox.com/v1/users/" .. random_number .. "/items/3/" .. Item_Id .. "/is-owned"
+			else
+				inventory_url = "https://inventory.roblox.com/v1/users/" .. random_number .. "/items/0/" .. Item_Id .. "/is-owned"
+			end
+
+			local inventory_response = HttpService:GetAsync(inventory_url)
+
+			if inventory_response.text == "false" then
+				print("[X] This account doesn't have item")
+				continue
+			end
+
+			local user_url = "https://users.roblox.com/v1/users/" .. random_number
+			local user_response = HttpService:GetAsync(user_url)
+			local name_acc = user_response.json().name
+
+		end
+	else
+end
+end)
